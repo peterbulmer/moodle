@@ -116,79 +116,88 @@ if ($p_secret !== false) {
     die; //never reached
 }
 
-$mform = new login_forgot_password_form();
+forgotpw_process_request();
 
-if ($mform->is_cancelled()) {
-    redirect(get_login_url());
+/*  This function processes a user's request to set a new password in the event they forgot the old one.
+    If no user identifier has been supplied, it displays a form where they can submit their identifier.
+    Where they have supplied identifier, the function will check their status, and send email as appropriate.
+*/
+function forgotpw_process_request() {
+    global $DB, $OUTPUT, $CFG, $PAGE;
+    $systemcontext = context_system::instance();
+    $mform = new login_forgot_password_form();
 
-} else if ($data = $mform->get_data()) {
-/// find the user in the database and mail info
+    if ($mform->is_cancelled()) {
+        redirect(get_login_url());
 
-    // first try the username
-    if (!empty($data->username)) {
-        $username = textlib::strtolower($data->username); // mimic the login page process, if they forget username they need to use email for reset
-        $user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0, 'suspended'=>0));
-
-    } else {
-        // this is tricky because
-        // 1/ the email is not guaranteed to be unique - TODO: send email with all usernames to select the correct account for pw reset
-        // 2/ mailbox may be case sensitive, the email domain is case insensitive - let's pretend it is all case-insensitive
-
-        $select = $DB->sql_like('email', ':email', false, true, false, '|'). " AND mnethostid = :mnethostid AND deleted=0 AND suspended=0";
-        $params = array('email'=>$DB->sql_like_escape($data->email, '|'), 'mnethostid'=>$CFG->mnet_localhost_id);
-        $user = $DB->get_record_select('user', $select, $params, '*', IGNORE_MULTIPLE);
-    }
-
-    if ($user and !empty($user->confirmed)) {
-
-        $userauth = get_auth_plugin($user->auth);
-        if (has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
-            // send email
-        }
-
-        if ($userauth->can_reset_password() and is_enabled_auth($user->auth)
-          and has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
-            // send reset password confirmation
-
-            // set 'secret' string
-            $user->secret = random_string(15);
-            $DB->set_field('user', 'secret', $user->secret, array('id'=>$user->id));
-
-            if (!send_password_change_confirmation_email($user)) {
-                print_error('cannotmailconfirm');
-            }
+    } else if ($data = $mform->get_data()) {
+        // User has submitted form data. Find the user in the database and mail info.
+        // First try the username.
+        if (!empty($data->username)) {
+            $username = textlib::strtolower($data->username); // mimic the login page process, if they forget username they need to use email for reset
+            $user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0, 'suspended'=>0));
 
         } else {
-            if (!send_password_change_info($user)) {
-                print_error('cannotmailconfirm');
+            // this is tricky because
+            // 1/ the email is not guaranteed to be unique - TODO: send email with all usernames to select the correct account for pw reset
+            // 2/ mailbox may be case sensitive, the email domain is case insensitive - let's pretend it is all case-insensitive
+
+            $select = $DB->sql_like('email', ':email', false, true, false, '|'). " AND mnethostid = :mnethostid AND deleted=0 AND suspended=0";
+            $params = array('email'=>$DB->sql_like_escape($data->email, '|'), 'mnethostid'=>$CFG->mnet_localhost_id);
+            $user = $DB->get_record_select('user', $select, $params, '*', IGNORE_MULTIPLE);
+        }
+
+        if ($user and !empty($user->confirmed)) {
+
+            $userauth = get_auth_plugin($user->auth);
+            if (has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
+                // send email
+            }
+
+            if ($userauth->can_reset_password() and is_enabled_auth($user->auth)
+              and has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
+                // send reset password confirmation
+
+                // set 'secret' string
+                $user->secret = random_string(15);
+                $DB->set_field('user', 'secret', $user->secret, array('id'=>$user->id));
+
+                if (!send_password_change_confirmation_email($user)) {
+                    print_error('cannotmailconfirm');
+                }
+
+            } else {
+                if (!send_password_change_info($user)) {
+                    print_error('cannotmailconfirm');
+                }
             }
         }
+
+        echo $OUTPUT->header();
+
+        if (empty($user->email) or !empty($CFG->protectusernames)) {
+            // Print general confirmation message
+            notice(get_string('emailpasswordconfirmmaybesent'), $CFG->wwwroot.'/index.php');
+
+        } else {
+            // Confirm email sent
+            $protectedemail = preg_replace('/([^@]*)@(.*)/', '******@$2', $user->email); // obfuscate the email address to protect privacy
+            $stremailpasswordconfirmsent = get_string('emailpasswordconfirmsent', '', $protectedemail);
+            notice($stremailpasswordconfirmsent, $CFG->wwwroot.'/index.php');
+        }
+
+        die; // never reached
     }
+
+    // make sure we really are on the https page when https login required
+    $PAGE->verify_https_required();
+
+
+    /// DISPLAY FORM
 
     echo $OUTPUT->header();
+    echo $OUTPUT->box(get_string('passwordforgotteninstructions2'), 'generalbox boxwidthnormal boxaligncenter');
+    $mform->display();
 
-    if (empty($user->email) or !empty($CFG->protectusernames)) {
-        // Print general confirmation message
-        notice(get_string('emailpasswordconfirmmaybesent'), $CFG->wwwroot.'/index.php');
-
-    } else {
-        // Confirm email sent
-        $protectedemail = preg_replace('/([^@]*)@(.*)/', '******@$2', $user->email); // obfuscate the email address to protect privacy
-        $stremailpasswordconfirmsent = get_string('emailpasswordconfirmsent', '', $protectedemail);
-        notice($stremailpasswordconfirmsent, $CFG->wwwroot.'/index.php');
-    }
-
-    die; // never reached
+    echo $OUTPUT->footer();
 }
-
-// make sure we really are on the https page when https login required
-$PAGE->verify_https_required();
-
-
-/// DISPLAY FORM
-
-echo $OUTPUT->header();
-echo $OUTPUT->box(get_string('passwordforgotteninstructions2'), 'generalbox boxwidthnormal boxaligncenter');
-$mform->display();
-
-echo $OUTPUT->footer();
