@@ -171,6 +171,12 @@ function cron_run() {
             mtrace(' Cleaned up read notifications');
         }
 
+        // Cleanup user password reset records
+        // Delete any reset request records which are invalid by more than a day.
+        $earliestvalid = time() - $CFG->pwresettime - DAYSECS;
+        $DB->delete_records_select('user_password_resets', "timerequested < ?", array($earliestvalid));
+        mtrace(' Cleaned up old password reset records');
+
         mtrace("...finished clean-up tasks");
 
     } // End of occasional clean-up tasks
