@@ -2312,6 +2312,7 @@ function xmldb_main_upgrade($oldversion) {
 
         upgrade_main_savepoint(true, 2013072600.01);
     }
+
     if ($oldversion < 2013081200.00) {
         // Define field uploadfiles to be added to external_services.
         $table = new xmldb_table('external_services');
