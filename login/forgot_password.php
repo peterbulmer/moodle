@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -62,10 +61,10 @@ if (isloggedin() and !isguestuser()) {
 
 if (empty($token)) {
     // This is a new password reset request.
-    // Process the request; identify the user & send confirmation email:
-    forgotpw_process_request();
+    // Process the request; identify the user & send confirmation email.
+    core_login_process_password_reset_request();
 } else {
     // User clicked on confirmation link in email message
     // validate the token & set new password
-    forgotpw_process_pwset($token);
+    core_login_process_password_set($token);
 }
