@@ -62,7 +62,7 @@ if (isloggedin() and !isguestuser()) {
 
 if (empty($token)) {
     // This is a new password reset request.
-    // Process the request; identify the user & send confirmation email:
+    // Process the request; identify the user & send confirmation email.
     forgotpw_process_request();
 } else {
     // User clicked on confirmation link in email message
