@@ -26,7 +26,8 @@ define('PWRESET_STATUS_NOEMAILSENT', 1);
 define('PWRESET_STATUS_TOKENSENT', 2);
 define('PWRESET_STATUS_OTHEREMAILSENT', 3);
 
-/*  This function processes a user's request to set a new password in the event they forgot the old one.
+/**
+    Processes a user's request to set a new password in the event they forgot the old one.
     If no user identifier has been supplied, it displays a form where they can submit their identifier.
     Where they have supplied identifier, the function will check their status, and send email as appropriate.
 */
@@ -160,12 +161,13 @@ function forgotpw_process_request() {
 /*  This function processes a user's submitted token to validate the request to set a new password.
     If the user's token is validated, they are prompted to set a new password.
  * @param string $token the one-use identifier which should verify the password reset request as being valid.
+ * @return null
 */
 function forgotpw_process_pwset($token) {
     global $DB, $CFG, $OUTPUT, $PAGE, $SESSION;
     $pwresettime = isset($CFG->pwresettime) ? $CFG->pwresettime : 1800;
-    $sql = 'SELECT u.*, upr.token, upr.timerequested, upr.id as tokenid FROM ' . $CFG->prefix . 'user u' .
-            ' INNER JOIN ' . $CFG->prefix . 'user_password_resets upr ON upr.userid = u.id ' .
+    $sql = 'SELECT u.*, upr.token, upr.timerequested, upr.id as tokenid FROM {user} u' .
+            ' INNER JOIN {user_password_resets} upr ON upr.userid = u.id ' .
             'WHERE upr.token = ?';
     $user = $DB->get_record_sql($sql, array($token));
 
@@ -246,7 +248,7 @@ function forgotpw_process_pwset($token) {
 /*
  * Create a new record in the database to track a new password set request for user.
  * @param object $user the user record, the requester would like a new password set for.
- * @return id of record created, or false on failure.
+ * @return mixed record created, or false on failure.
 */
 function create_reset_record ($user) {
     global $DB;
@@ -254,11 +256,17 @@ function create_reset_record ($user) {
     $resetrecord->timerequested = time();
     $resetrecord->userid = $user->id;
     $resetrecord->token = random_string(32);
-    $DB->insert_record('user_password_resets', $resetrecord);
-    return $resetrecord;
+    $result = $DB->insert_record('user_password_resets', $resetrecord);
+    if (empty($result)) {
+        return false;
+    } else {
+        $resetrecord->id = $result;
+        return $resetrecord;
+    }
 }
 
 /*  Determine where a user should be redirected after they have been logged in.
+ *  @return string url the user should be redirected to.
 */
 function get_postlogin_redirection() {
     global $CFG, $SESSION, $USER;
@@ -288,4 +296,3 @@ function get_postlogin_redirection() {
     }
     return $urltogo;
 }
-?>
