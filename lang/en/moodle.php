@@ -534,6 +534,7 @@ $string['editthisactivity'] = 'Edit this activity';
 $string['editthiscategory'] = 'Edit this category';
 $string['edituser'] = 'Edit user accounts';
 $string['email'] = 'Email address';
+$string['emailalreadysent'] = 'Password reset email has already been sent. Please check your email.';
 $string['emailactive'] = 'Email activated';
 $string['emailagain'] = 'Email (again)';
 $string['emailconfirm'] = 'Confirm your account';
