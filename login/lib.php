@@ -25,6 +25,7 @@
 define('PWRESET_STATUS_NOEMAILSENT', 1);
 define('PWRESET_STATUS_TOKENSENT', 2);
 define('PWRESET_STATUS_OTHEREMAILSENT', 3);
+define('PWRESET_STATUS_ALREADYSENT', 4);
 
 /**
     Processes a user's request to set a new password in the event they forgot the old one.
@@ -94,6 +95,7 @@ function forgotpw_process_request() {
                     $sendemail = true;
                 } else {
                     // Preexisting, valid request. User has already re-requested email.
+                    $pwresetstatus = PWRESET_STATUS_ALREADYSENT;
                     $sendemail = false;
                 }
 
@@ -126,6 +128,12 @@ function forgotpw_process_request() {
             // User doesn't have an email set - can't send a password change confimation email.
             notice(get_string('emailpasswordconfirmnoemail'), $CFG->wwwroot.'/index.php');
             die; // never reached.
+        } else if ($pwresetstatus == PWRESET_STATUS_ALREADYSENT) {
+            // User found, protectusernames is off, but user has already (re) requested a reset.
+            // Don't send a 3rd reset email.
+            $stremailalreadysent = get_string('emailalreadysent');
+            notice($stremailalreadysent, $CFG->wwwroot.'/index.php');
+            die; // Never reached.
         } else if ($pwresetstatus == PWRESET_STATUS_NOEMAILSENT) {
             // User found, protectusernames is off, but user is not confirmed.
             // Pretend we sent them an email.
