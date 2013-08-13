@@ -534,7 +534,7 @@ $string['editthisactivity'] = 'Edit this activity';
 $string['editthiscategory'] = 'Edit this category';
 $string['edituser'] = 'Edit user accounts';
 $string['email'] = 'Email address';
-$string['emailalreadysent'] = 'Password reset email has already been sent. Please check your email.';
+$string['emailalreadysent'] = 'A Password reset email has already been sent. Please check your email.';
 $string['emailactive'] = 'Email activated';
 $string['emailagain'] = 'Email (again)';
 $string['emailconfirm'] = 'Confirm your account';
@@ -602,7 +602,7 @@ If you continue to have difficulty, please contact the site administrator.</p>';
 $string['emailpasswordconfirmnoemail'] = '<p>The user account you specified does not have a recorded email address.</p>
    <p>Please contact the site administrator.</p>';
 $string['emailpasswordconfirmnotsent'] = '<p>The user detail you supplied does not identify an existing user account.</p>
-   <p>Please check the detail you entered, then try again.
+   <p>Please check the information you entered, then try again.
 If you continue to have difficulty, please contact the site administrator.</p>';
 $string['emailpasswordconfirmsent'] = 'An email should have been sent to your address at <b>{$a}</b>.
 <br />It contains easy instructions to confirm and complete this password change.
@@ -658,7 +658,7 @@ If this password reset was not requested by you, no action is needed.
 
 If you need help, please contact the site administrator,
 {$a->admin}';
-$string['emailresetconfirmationsubject'] = '{$a}: Password Reset Request';
+$string['emailresetconfirmationsubject'] = '{$a}: Password reset request';
 $string['emailresetconfirmsent'] = 'An email has been sent to your address at <b>{$a}</b>.
 <br />It contains easy instructions to confirm and complete this password change.
 If you continue to have difficulty, contact the site administrator.';
