@@ -28,10 +28,10 @@ define('PWRESET_STATUS_OTHEREMAILSENT', 3);
 define('PWRESET_STATUS_ALREADYSENT', 4);
 
 /**
-    Processes a user's request to set a new password in the event they forgot the old one.
-    If no user identifier has been supplied, it displays a form where they can submit their identifier.
-    Where they have supplied identifier, the function will check their status, and send email as appropriate.
-*/
+ *  Processes a user's request to set a new password in the event they forgot the old one.
+ *  If no user identifier has been supplied, it displays a form where they can submit their identifier.
+ *  Where they have supplied identifier, the function will check their status, and send email as appropriate.
+ */
 function forgotpw_process_request() {
     global $DB, $OUTPUT, $CFG, $PAGE;
     $systemcontext = context_system::instance();
