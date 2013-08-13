@@ -45,16 +45,17 @@ function forgotpw_process_request() {
         // Next find the user account in the database which the requesting user claims to own.
         if (!empty($data->username)) {
             // Username has been specified - load the user record based on that.
-            $username = core_text::strtolower($data->username); // mimic the login page process, if they forget username they need to use email for reset
-            $user = $DB->get_record('user', array('username'=>$username, 'mnethostid'=>$CFG->mnet_localhost_id, 'deleted'=>0, 'suspended'=>0));
-
+            $username = core_text::strtolower($data->username); // Mimic the login page process.
+            $userparams = array('username' => $username, 'mnethostid' => $CFG->mnet_localhost_id, 'deleted' => 0, 'suspended' => 0);
+            $user = $DB->get_record('user', $userparams);
         } else {
             // Try to load the user record based on email address.
             // this is tricky because
-            // 1/ the email is not guaranteed to be unique - TODO: send email with all usernames to select the correct account for pw reset
-            // 2/ mailbox may be case sensitive, the email domain is case insensitive - let's pretend it is all case-insensitive
+            // 1/ the email is not guaranteed to be unique - TODO: send email with all usernames to select the account for pw reset
+            // 2/ mailbox may be case sensitive, the email domain is case insensitive - let's pretend it is all case-insensitive.
 
-            $select = $DB->sql_like('email', ':email', false, true, false, '|'). " AND mnethostid = :mnethostid AND deleted=0 AND suspended=0";
+            $select = $DB->sql_like('email', ':email', false, true, false, '|') .
+                    " AND mnethostid = :mnethostid AND deleted=0 AND suspended=0";
             $params = array('email'=>$DB->sql_like_escape($data->email, '|'), 'mnethostid'=>$CFG->mnet_localhost_id);
             $user = $DB->get_record_select('user', $select, $params, '*', IGNORE_MULTIPLE);
         }
@@ -118,16 +119,16 @@ function forgotpw_process_request() {
             // Neither confirm, nor deny existance of any username or email address in database.
             // Print general (non-commital) message.
             notice(get_string('emailpasswordconfirmmaybesent'), $CFG->wwwroot.'/index.php');
-            die; // never reached.
+            die; // Never reached.
         } else if (empty($user)) {
             // Protect usernames is off, and we couldn't find the user with details specified.
             // Print failure advice.
             notice(get_string('emailpasswordconfirmnotsent'), $CFG->wwwroot.'/forgot_password.php');
-            die; // never reached
+            die; // Never reached.
         } else if (empty($user->email)) {
             // User doesn't have an email set - can't send a password change confimation email.
             notice(get_string('emailpasswordconfirmnoemail'), $CFG->wwwroot.'/index.php');
-            die; // never reached.
+            die; // Never reached.
         } else if ($pwresetstatus == PWRESET_STATUS_ALREADYSENT) {
             // User found, protectusernames is off, but user has already (re) requested a reset.
             // Don't send a 3rd reset email.
@@ -138,26 +139,26 @@ function forgotpw_process_request() {
             // User found, protectusernames is off, but user is not confirmed.
             // Pretend we sent them an email.
             // This is a big usability problem - need to tell users why we didn't send them an email.
-            $protectedemail = preg_replace('/([^@]*)@(.*)/', '******@$2', $user->email); // obfuscate email address to protect privacy
+            // Obfuscate email address to protect privacy.
+            $protectedemail = preg_replace('/([^@]*)@(.*)/', '******@$2', $user->email);
             $stremailpasswordconfirmsent = get_string('emailpasswordconfirmsent', '', $protectedemail);
             notice($stremailpasswordconfirmsent, $CFG->wwwroot.'/index.php');
-            die; // never reached
+            die; // Never reached.
         } else {
-            // Confirm email sent.
-            $protectedemail = preg_replace('/([^@]*)@(.*)/', '******@$2', $user->email); // obfuscate email address to protect privacy
+            // Confirm email sent. (Obfuscate email address to protect privacy).
+            $protectedemail = preg_replace('/([^@]*)@(.*)/', '******@$2', $user->email);
             // This is a small usability problem - may be obfuscating the email address which the user has just supplied.
             $stremailresetconfirmsent = get_string('emailresetconfirmsent', '', $protectedemail);
             notice($stremailresetconfirmsent, $CFG->wwwroot.'/index.php');
-            die; // never reached.
+            die; // Never reached.
         }
-        die; // never reached.
+        die; // Never reached.
     }
 
-    // make sure we really are on the https page when https login required.
+    // Make sure we really are on the https page when https login required.
     $PAGE->verify_https_required();
 
-
-    /// DISPLAY FORM
+    // DISPLAY FORM.
 
     echo $OUTPUT->header();
     echo $OUTPUT->box(get_string('passwordforgotteninstructions2'), 'generalbox boxwidthnormal boxaligncenter');
@@ -167,7 +168,7 @@ function forgotpw_process_request() {
 }
 
 /*  This function processes a user's submitted token to validate the request to set a new password.
-    If the user's token is validated, they are prompted to set a new password.
+ *  If the user's token is validated, they are prompted to set a new password.
  * @param string $token the one-use identifier which should verify the password reset request as being valid.
  * @return null
 */
@@ -186,7 +187,7 @@ function forgotpw_process_pwset($token) {
         // Direct the user to the forgot password page to request a password reset.
         echo $OUTPUT->header();
         notice(get_string('noresetrecord'), $forgotpasswordurl);
-        die; // never reached
+        die; // Never reached.
     }
     if ($user->timerequested < (time() - $pwresettime)) {
         // There is a reset record, but it's expired.
@@ -194,17 +195,17 @@ function forgotpw_process_pwset($token) {
         $pwresetmins = $pwresettime / 60;
         echo $OUTPUT->header();
         notice(get_string('resetrecordexpired', '', $pwresetmins), $forgotpasswordurl);
-        die; // never reached
+        die; // Never reached.
     }
 
     if ($user->auth === 'nologin' or !is_enabled_auth($user->auth)) {
-        // bad luck - user is not able to login, do not let them set password.
+        // Bad luck - user is not able to login, do not let them set password.
         echo $OUTPUT->header();
         print_error('forgotteninvalidurl');
-        die; // never reached.
+        die; // Never reached.
     }
 
-    // check this isn't guest user
+    // Check this isn't guest user.
     if (isguestuser($user)) {
         print_error('cannotresetguestpwd');
     }
@@ -242,7 +243,7 @@ function forgotpw_process_pwset($token) {
         unset_user_preference('create_password', $user);
 
         if (!empty($user->lang)) {
-            // unset previous session language - use user preference instead
+            // Unset previous session language - use user preference instead.
             unset($SESSION->lang);
         }
         add_to_log(SITEID, 'user', 'login', "view.php?id=$user->id&course=".SITEID, $user->id, 0, $user->id);
@@ -278,25 +279,26 @@ function create_reset_record ($user) {
 */
 function get_postlogin_redirection() {
     global $CFG, $SESSION, $USER;
-    /// Prepare redirection.
+    // Prepare redirection.
     if (user_not_fully_set_up($USER)) {
         $urltogo = $CFG->wwwroot.'/user/edit.php';
-        // We don't delete $SESSION->wantsurl yet, so we get there later
+        // We don't delete $SESSION->wantsurl yet, so we get there later.
 
-    } else if (isset($SESSION->wantsurl) and (strpos($SESSION->wantsurl, $CFG->wwwroot) === 0 or strpos($SESSION->wantsurl, str_replace('http://', 'https://', $CFG->wwwroot)) === 0)) {
-        $urltogo = $SESSION->wantsurl;    /// Because it's an address in this site
+    } else if (isset($SESSION->wantsurl) and (strpos($SESSION->wantsurl, $CFG->wwwroot) === 0
+            or strpos($SESSION->wantsurl, str_replace('http://', 'https://', $CFG->wwwroot)) === 0)) {
+        $urltogo = $SESSION->wantsurl;    // Because it's an address in this site.
         unset($SESSION->wantsurl);
     } else {
-        // no wantsurl stored or external - go to homepage
+        // No wantsurl stored or external - go to homepage.
         $urltogo = $CFG->wwwroot.'/';
         unset($SESSION->wantsurl);
     }
 
     // If the url to go to is the same as the site page, check for default homepage.
     if ($urltogo == ($CFG->wwwroot . '/')) {
-        $home_page = get_home_page();
-        // Go to my-moodle page instead of site homepage if defaulthomepage set to homepage_my
-        if ($home_page == HOMEPAGE_MY && !is_siteadmin() && !isguestuser()) {
+        $homepage = get_home_page();
+        // Go to my-moodle page instead of site homepage if defaulthomepage set to homepage_my.
+        if ($homepage == HOMEPAGE_MY && !is_siteadmin() && !isguestuser()) {
             if ($urltogo == $CFG->wwwroot or $urltogo == $CFG->wwwroot.'/' or $urltogo == $CFG->wwwroot.'/index.php') {
                 $urltogo = $CFG->wwwroot.'/my/';
             }
