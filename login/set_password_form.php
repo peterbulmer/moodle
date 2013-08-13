@@ -43,7 +43,7 @@ class login_set_password_form extends moodleform {
         $mform->addElement('hidden', 'token', '');
         $mform->setType('token', PARAM_RAW);
 
-        // visible elements
+        // Visible elements.
         $mform->addElement('static', 'username2', get_string('username'));
 
         if (!empty($CFG->passwordpolicy)) {
@@ -53,20 +53,20 @@ class login_set_password_form extends moodleform {
         $mform->addRule('password', get_string('required'), 'required', null, 'client');
         $mform->setType('password', PARAM_RAW);
 
-        $strpasswordagain = get_string('newpassword').' ('.get_String('again').')';
+        $strpasswordagain = get_string('newpassword') . ' (' . get_string('again') . ')';
         $mform->addElement('password', 'password2', $strpasswordagain, 'autocomplete="on"');
         $mform->addRule('password2', get_string('required'), 'required', null, 'client');
         $mform->setType('password2', PARAM_RAW);
 
-        // hidden optional params
+        // Hidden optional params.
         $mform->addElement('hidden', 'id', 0);
         $mform->setType('id', PARAM_INT);
 
-        // buttons
+        // Buttons.
         $this->add_action_buttons(true);
     }
 
-    // perform extra password change validation
+    // Perform extra password change validation.
     public function validation($data, $files) {
         global $USER;
         $errors = parent::validation($data, $files);
@@ -78,7 +78,7 @@ class login_set_password_form extends moodleform {
             return $errors;
         }
 
-        $errmsg = '';//prevents eclipse warnings
+        $errmsg = ''; // Prevents eclipse warnings.
         if (!check_password_policy($data['password'], $errmsg)) {
             $errors['password'] = $errmsg;
             $errors['password2'] = $errmsg;
